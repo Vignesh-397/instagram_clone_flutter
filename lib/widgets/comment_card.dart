@@ -10,6 +10,7 @@ class CommentCard extends StatefulWidget {
 }
 
 class _CommentCardState extends State<CommentCard> {
+  bool isCommentLiked = false;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -47,20 +48,30 @@ class _CommentCardState extends State<CommentCard> {
                     child: Text(
                       DateFormat.yMMMd()
                           .format(widget.snap['datePublished'].toDate()),
-                      style:
-                          TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w400),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: const Icon(
-              Icons.favorite,
-              size: 16,
-            ),
+          IconButton(
+            onPressed: () {
+              setState(() {
+                isCommentLiked = !isCommentLiked;
+              });
+            },
+            icon: isCommentLiked
+                ? const Icon(
+                    Icons.favorite,
+                    color: Colors.red,
+                    size: 16,
+                  )
+                : const Icon(
+                    Icons.favorite,
+                    size: 16,
+                  ),
           )
         ],
       ),

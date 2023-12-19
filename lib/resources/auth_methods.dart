@@ -90,20 +90,7 @@ class AuthMethods {
     return res;
   }
 
-  // Future<String> uploadPost({
-  //   required Uint8List file,
-  // }) async {
-  //   String res = 'post upload failed';
-  //   try {
-  //     String postUrl =
-  //         await StorageMethods().uploadImageToStoarge('posts', file, true);
-  //     await _firestore.collection('posts').doc(_auth.currentUser!.uid).set({
-  //       'postUrl': postUrl,
-  //     });
-  //     res = 'post-success';
-  //   } catch (err) {
-  //     res = err.toString();
-  //   }
-  //   return res;
-  // }
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
 }

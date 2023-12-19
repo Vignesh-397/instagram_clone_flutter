@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instagram_clone_flutter/models/post.dart';
@@ -6,7 +7,6 @@ import 'package:instagram_clone_flutter/resources/storage_methods.dart';
 
 class FireStoreMethods {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   Future<String> uploadPost(
     String description,
     Uint8List file,
@@ -100,5 +100,68 @@ class FireStoreMethods {
       res = e.toString();
     }
     return res;
+  }
+
+  Future<String> followUser(String uid, String followUId) async {
+    String res = 'Something went wrong';
+    try {
+      DocumentSnapshot snap =
+          await _firestore.collection('users').doc(uid).get();
+      List following = snap['following'];
+
+      if (following.contains(followUId)) {
+        await _firestore.collection('users').doc(followUId).update({
+          'followers': FieldValue.arrayRemove(
+            [uid],
+          ),
+        });
+        await _firestore.collection('users').doc(uid).update({
+          'following': FieldValue.arrayRemove(
+            [followUId],
+          ),
+        });
+      } else {
+        await _firestore.collection('users').doc(followUId).update({
+          'followers': FieldValue.arrayUnion(
+            [uid],
+          ),
+        });
+        await _firestore.collection('users').doc(uid).update({
+          'following': FieldValue.arrayUnion(
+            [followUId],
+          ),
+        });
+      }
+
+      res = 'success';
+    } catch (e) {
+      res = e.toString();
+    }
+    return res;
+  }
+
+  Future<String> toggleSavedPost(String postId) async {
+    try {
+      final userDocRef = _firestore
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid);
+
+      final savedPostsCollection = userDocRef.collection('savedPosts');
+
+      final existingPost =
+          await savedPostsCollection.where('postId', isEqualTo: postId).get();
+
+      if (existingPost.docs.isNotEmpty) {
+        await existingPost.docs.first.reference.delete();
+        return 'Post removed from saved';
+      } else {
+        await savedPostsCollection.add({
+          'postId': postId,
+        });
+        return 'Post saved successfully';
+      }
+    } catch (e) {
+      return 'Something went wrong: $e';
+    }
   }
 }
