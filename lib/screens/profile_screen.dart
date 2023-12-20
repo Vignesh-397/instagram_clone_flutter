@@ -64,6 +64,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  deletePost(String postId) async {
+    try {
+      await FireStoreMethods().deletePost(postId);
+    } catch (err) {
+      showSnackBar(
+        context,
+        err.toString(),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return isLoading
@@ -233,10 +244,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         itemBuilder: (context, index) {
                           DocumentSnapshot snap = snapshot.data!.docs[index];
 
-                          return Container(
-                            child: Image(
-                              image: NetworkImage(snap['postUrl']),
-                              fit: BoxFit.cover,
+                          return InkWell(
+                            onLongPress: () {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (context) {
+                                  return Dialog(
+                                    child: ListView(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                        shrinkWrap: true,
+                                        children: [
+                                          'Delete',
+                                        ]
+                                            .map(
+                                              (e) => InkWell(
+                                                  child: Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 12,
+                                                        horizontal: 16),
+                                                    child: Text(e),
+                                                  ),
+                                                  onTap: () {
+                                                    deletePost(
+                                                      snapshot.data!
+                                                          .docs[index]['postId']
+                                                          .toString(),
+                                                    );
+                                                    // remove the dialog box
+                                                    Navigator.of(context).pop();
+                                                  }),
+                                            )
+                                            .toList()),
+                                  );
+                                },
+                              );
+                            },
+                            child: Container(
+                              child: Image(
+                                image: NetworkImage(snap['postUrl']),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           );
                         },
@@ -271,4 +321,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+
+  void showSnackBar(BuildContext context, String string) {}
 }

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone_flutter/models/user.dart' as model;
 import 'package:instagram_clone_flutter/providers/user_provider.dart';
@@ -24,13 +25,33 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
+  String currentUid = FirebaseAuth.instance.currentUser!.uid;
   bool isLikeAnimating = false;
   int commentLength = 0;
+  List savedposts = [];
   bool isPostSaved = false;
+
   @override
   void initState() {
     super.initState();
     getComments();
+    getuser();
+  }
+
+  void getuser() async {
+    try {
+      DocumentSnapshot userSnap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUid)
+          .get();
+      setState(() {
+        savedposts =
+            (userSnap.data() as Map<String, dynamic>?)?['savedposts'] ?? [];
+        isPostSaved = savedposts.contains(widget.snap['postId']);
+      });
+    } catch (e) {
+      showSnackbar(e.toString(), context);
+    }
   }
 
   void getComments() async {
@@ -244,10 +265,10 @@ class _PostCardState extends State<PostCard> {
                     onPressed: () async {
                       String res = await FireStoreMethods()
                           .toggleSavedPost(widget.snap['postId']);
-                      showSnackbar(res, context);
                       setState(() {
                         isPostSaved = !isPostSaved;
                       });
+                      showSnackbar(res, context);
                     },
                     icon: isPostSaved
                         ? const Icon(Icons.bookmark)

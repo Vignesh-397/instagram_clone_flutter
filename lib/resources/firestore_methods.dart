@@ -141,27 +141,27 @@ class FireStoreMethods {
   }
 
   Future<String> toggleSavedPost(String postId) async {
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    String res = 'Something went wrong';
     try {
-      final userDocRef = _firestore
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid);
+      DocumentSnapshot snap =
+          await _firestore.collection('users').doc(uid).get();
+      List savedposts = snap['savedposts'];
 
-      final savedPostsCollection = userDocRef.collection('savedPosts');
-
-      final existingPost =
-          await savedPostsCollection.where('postId', isEqualTo: postId).get();
-
-      if (existingPost.docs.isNotEmpty) {
-        await existingPost.docs.first.reference.delete();
-        return 'Post removed from saved';
-      } else {
-        await savedPostsCollection.add({
-          'postId': postId,
+      if (savedposts.contains(postId)) {
+        await _firestore.collection('users').doc(uid).update({
+          'savedposts': FieldValue.arrayRemove([postId]),
         });
-        return 'Post saved successfully';
+        res = 'Post removed from saved.';
+      } else {
+        await _firestore.collection('users').doc(uid).update({
+          'savedposts': FieldValue.arrayUnion([postId]),
+        });
+        res = 'Post saved successfully.';
       }
     } catch (e) {
-      return 'Something went wrong: $e';
+      res = 'Something went wrong: $e';
     }
+    return res;
   }
 }
