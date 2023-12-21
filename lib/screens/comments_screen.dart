@@ -41,6 +41,7 @@ class _CommentScreeState extends State<CommentScreen> {
             .orderBy('datePublished', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
+          print(snapshot.data!.docs[0].data());
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -52,6 +53,7 @@ class _CommentScreeState extends State<CommentScreen> {
               child: Text('No comments yet.'),
             );
           }
+
           return ListView.builder(
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) => CommentCard(

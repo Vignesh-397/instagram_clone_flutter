@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_clone_flutter/resources/auth_methods.dart';
 import 'package:instagram_clone_flutter/resources/firestore_methods.dart';
+import 'package:instagram_clone_flutter/screens/followers_screen.dart';
+import 'package:instagram_clone_flutter/screens/following_screen.dart';
 import 'package:instagram_clone_flutter/screens/login_screen.dart';
 import 'package:instagram_clone_flutter/screens/saved_posts_screen.dart';
 import 'package:instagram_clone_flutter/utils/colors.dart';
@@ -43,12 +45,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .doc(widget.uid)
           .get();
 
-      var postSanp = await FirebaseFirestore.instance
+      var postSnap = await FirebaseFirestore.instance
           .collection('posts')
           .where('uid', isEqualTo: widget.uid)
           .get();
 
-      postLen = postSanp.docs.length;
+      var validPosts = postSnap.docs.where((doc) => doc.exists).toList();
+
+      postLen = validPosts.length;
       followers = userSnap.data()!['followers'].length;
       following = userSnap.data()!['following'].length;
       isFollowing = userSnap
@@ -67,6 +71,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   deletePost(String postId) async {
     try {
       await FireStoreMethods().deletePost(postId);
+
+      var postSnap = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('uid', isEqualTo: widget.uid)
+          .get();
+      var validPosts = postSnap.docs.where((doc) => doc.exists).toList();
+
+      setState(() {
+        postLen = validPosts.length;
+      });
     } catch (err) {
       showSnackBar(
         context,
@@ -109,10 +123,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Row(
                         children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.grey,
-                            radius: 40,
-                            backgroundImage: NetworkImage(userData['imgUrl']),
+                          GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      contentPadding: EdgeInsets
+                                          .zero, // Remove default padding
+                                      content: ClipRect(
+                                        child: Image.network(
+                                          userData['imgUrl'],
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    );
+                                  });
+                            },
+                            child: CircleAvatar(
+                              backgroundColor: Colors.grey,
+                              radius: 40,
+                              backgroundImage: NetworkImage(userData['imgUrl']),
+                            ),
                           ),
                           Expanded(
                             flex: 1,
@@ -124,8 +156,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       MainAxisAlignment.spaceEvenly,
                                   children: [
                                     buildStatColumn(postLen, 'posts'),
-                                    buildStatColumn(followers, 'followers'),
-                                    buildStatColumn(following, 'following'),
+                                    InkWell(
+                                      onTap: () {
+                                        showModalBottomSheet(
+                                          useSafeArea: true,
+                                          isScrollControlled: true,
+                                          context: context,
+                                          builder: (ctx) {
+                                            return FollowersScreen(
+                                              uid: widget.uid,
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: buildStatColumn(
+                                          followers, 'followers'),
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        showModalBottomSheet(
+                                          useSafeArea: true,
+                                          isScrollControlled: true,
+                                          context: context,
+                                          builder: (ctx) {
+                                            return FollowingScreen(
+                                              uid: widget.uid,
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: buildStatColumn(
+                                          following, 'following'),
+                                    ),
                                   ],
                                 ),
                                 Row(

@@ -140,19 +140,11 @@ class _PostCardState extends State<PostCard> {
                           ]
                               .map(
                                 (e) => InkWell(
-                                  onTap: () {}
-                                  // () async {
-                                  //   String res =
-                                  //       await FireStoreMethods().deletePost(
-                                  //     widget.snap['postId'],
-                                  //   );
-                                  //   Navigator.of(context).pop();
-                                  //   if (res == 'success') {
-                                  //     showSnackbar(
-                                  //         'Deleted successfully', context);
-                                  //   }
-                                  // }
-                                  ,
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    showSnackbar(
+                                        'Reported successfully.', context);
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
@@ -241,12 +233,15 @@ class _PostCardState extends State<PostCard> {
                 ),
               ),
               IconButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => CommentScreen(
+                onPressed: () => showModalBottomSheet(
+                  useSafeArea: true,
+                  isScrollControlled: true,
+                  context: context,
+                  builder: (ctx) {
+                    return CommentScreen(
                       snap: widget.snap,
-                    ),
-                  ),
+                    );
+                  },
                 ),
                 icon: const Icon(
                   Icons.comment_outlined,
