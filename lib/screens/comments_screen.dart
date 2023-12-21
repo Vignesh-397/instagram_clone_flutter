@@ -17,6 +17,7 @@ class CommentScreen extends StatefulWidget {
 }
 
 class _CommentScreeState extends State<CommentScreen> {
+  bool isLoading = false;
   final TextEditingController _commentController = TextEditingController();
   @override
   void dispose() {
@@ -41,7 +42,7 @@ class _CommentScreeState extends State<CommentScreen> {
             .orderBy('datePublished', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          print(snapshot.data!.docs[0].data());
+          isLoading = true;
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -53,13 +54,17 @@ class _CommentScreeState extends State<CommentScreen> {
               child: Text('No comments yet.'),
             );
           }
-
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) => CommentCard(
-              snap: snapshot.data!.docs[index].data(),
-            ),
-          );
+          isLoading = false;
+          return isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(),
+                )
+              : ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) => CommentCard(
+                    snap: snapshot.data!.docs[index].data(),
+                  ),
+                );
         },
       ),
       bottomNavigationBar: SafeArea(
